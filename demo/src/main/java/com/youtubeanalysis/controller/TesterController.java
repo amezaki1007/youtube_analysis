@@ -11,7 +11,10 @@ import com.youtubeanalysis.service.ITesterService;
 
 import lombok.RequiredArgsConstructor;
 
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = {
+    "http://localhost:3000",
+    "https://localhost" // Android動作用
+})
 @RestController
 @RequiredArgsConstructor
 public class TesterController {
