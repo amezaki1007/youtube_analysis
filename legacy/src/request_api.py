@@ -18,10 +18,10 @@ class DataApiClient:
         endpoint = f"https://www.googleapis.com/youtube/v3/videos?part=contentDetails,statistics,snippet&id={video_id}&key={self.api_key}"
         res = requests.get(endpoint)
         return res.json()
-    
+
     def search(keyword: list[str]):
         part = "snippet"
-        
+
 
 
 def request_api(url: str):
