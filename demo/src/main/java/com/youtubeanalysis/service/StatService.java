@@ -1,5 +1,19 @@
 package com.youtubeanalysis.service;
 
-public class StatService implements IStatService {
+import java.util.List;
 
+import org.springframework.stereotype.Service;
+
+import com.youtubeanalysis.domain.model.VideoStatResponse;
+import com.youtubeanalysis.domain.model.VideoTrendRequest;
+
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class StatService implements IStatService {
+  @Override
+  public List<VideoStatResponse> getTrend(VideoTrendRequest request) {
+    return null;
+  }
 }

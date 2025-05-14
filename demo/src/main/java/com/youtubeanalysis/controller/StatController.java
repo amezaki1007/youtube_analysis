@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.youtubeanalysis.domain.model.VideoStatDto;
+import com.youtubeanalysis.domain.model.VideoStatResponse;
 import com.youtubeanalysis.service.IStatService;
 
 import lombok.RequiredArgsConstructor;
@@ -21,11 +21,11 @@ public class StatController {
   private final IStatService statService;
 
   @PostMapping
-  public List<VideoStatDto> getVideosWithStat(
+  public List<VideoStatResponse> getVideosWithStat(
     @RequestParam int durartion,
     @RequestBody List<String> videoIds
   ) {
-    return null;
+    return statService.getTrend(null);
   }
 
 }

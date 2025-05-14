@@ -4,9 +4,10 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.youtubeanalysis.domain.model.VideoDto;
+import com.youtubeanalysis.domain.model.VideoStatResponse;
+import com.youtubeanalysis.domain.model.VideoTrendRequest;
 
 @Service
 public interface IStatService {
-  public List<VideoDto> getTrend();
+  public List<VideoStatResponse> getTrend(VideoTrendRequest request);
 }

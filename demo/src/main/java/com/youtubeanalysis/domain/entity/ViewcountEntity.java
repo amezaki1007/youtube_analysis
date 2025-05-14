@@ -20,7 +20,7 @@ public class ViewcountEntity {
     private String videoId;
 
     @Column(name = "view_count", nullable = false)
-    private Integer viewCount;
+    private Long viewCount;
 
     @Column(name = "log_date", nullable = false)
     private LocalDate logDate;
