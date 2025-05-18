@@ -35,7 +35,7 @@ public class TrendService implements ITrendService {
     LocalDateTime from, to;
     if (request.getMode().equals("recent")) {
       videoEntities.addAll(recentVideoRepository.findAll());
-      from = LocalDateTime.now().minusDays(7L);
+      from = LocalDateTime.now().minusDays(Math.min(request.getRange(), 180L));
       to = LocalDateTime.now();
     } else {
       videoEntities.addAll(videoRepository.findAll());
