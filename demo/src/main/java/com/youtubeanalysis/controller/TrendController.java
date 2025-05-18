@@ -21,7 +21,10 @@ public class TrendController {
   private final ITrendService trendService;
 
   @GetMapping
-  @CrossOrigin(origins = "http://localhost:3000")
+  @CrossOrigin(origins = {
+    "http://localhost:3000",
+    "https://localhost" // Android動作用
+  })
   public List<VideoTrendResponse> getTrendVideos(VideoTrendRequest request) {
     return trendService.getTrend(request);
   }
