@@ -99,7 +99,7 @@ public class TrendService implements ITrendService {
     VideoTrendDto response = new VideoTrendDto();
     response.setId(baseVideo.getId());
     response.setVideoTitle(baseVideo.getTitle());
-    response.setViedoId(baseVideo.getVideoId());
+    response.setVideoId(baseVideo.getVideoId());
     response.setThumbnail(baseVideo.getThumbnailUrl());
     response.setPublishedAt(baseVideo.getPublishedAt());
     response.setVideoType(baseVideo.getVideoType());
@@ -111,7 +111,7 @@ public class TrendService implements ITrendService {
     VideoTrendResponse response = new VideoTrendResponse();
     response.setId(dto.getId());
     response.setVideoTitle(dto.getVideoTitle());
-    response.setViedoId(dto.getViedoId());
+    response.setVideoId(dto.getVideoId());
     response.setThumbnail(dto.getThumbnail());
     response.setPublishedAt(dto.getPublishedAt());
     response.setVideoType(dto.getVideoType());

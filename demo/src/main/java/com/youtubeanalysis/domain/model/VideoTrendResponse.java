@@ -10,7 +10,7 @@ public class VideoTrendResponse {
 
   private String videoTitle;
 
-  private String viedoId;
+  private String videoId;
 
   private String thumbnail;
 

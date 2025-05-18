@@ -13,7 +13,7 @@ public class VideoTrendDto {
 
   private String videoTitle;
 
-  private String viedoId;
+  private String videoId;
 
   private String thumbnail;
 
