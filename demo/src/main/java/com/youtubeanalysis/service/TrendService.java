@@ -34,11 +34,11 @@ public class TrendService implements ITrendService {
     List<VideoEntityBase> videoEntities = new ArrayList<>();
     LocalDateTime from, to;
     if (request.getMode().equals("recent")) {
-      videoEntities.addAll(recentVideoRepository.findAll());
+      videoEntities.addAll(recentVideoRepository.findByHideFalse());
       from = LocalDateTime.now().minusDays(Math.min(request.getRange(), 180L));
       to = LocalDateTime.now();
     } else {
-      videoEntities.addAll(videoRepository.findAll());
+      videoEntities.addAll(videoRepository.findByHideFalse());
       if(request.getSeason().equals("spring")){
         from = LocalDateTime.of(request.getYear(), 3, 1, 0, 0, 0);
         to = LocalDateTime.of(request.getYear(), 5, 31, 23, 59, 59);

@@ -48,4 +48,7 @@ public abstract class VideoEntityBase {
 
   @Column(name = "status", length = 10)
   private String status;
+
+  @Column(name = "hide", nullable = false)
+  private boolean hide = false; // デフォルトは非表示でない（false）
 }

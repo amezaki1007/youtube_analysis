@@ -16,15 +16,15 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/v1/trend")
 @RequiredArgsConstructor
+@CrossOrigin(origins = {
+  "http://localhost:3000",
+  "https://localhost" // Android動作用
+})
 public class TrendController {
 
   private final ITrendService trendService;
 
   @GetMapping
-  @CrossOrigin(origins = {
-    "http://localhost:3000",
-    "https://localhost" // Android動作用
-  })
   public List<VideoTrendResponse> getTrendVideos(VideoTrendRequest request) {
     return trendService.getTrend(request);
   }
