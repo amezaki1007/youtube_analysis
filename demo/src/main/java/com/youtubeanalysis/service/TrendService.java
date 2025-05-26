@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -31,14 +32,14 @@ public class TrendService implements ITrendService {
 
   @Override
   public List<VideoTrendResponse> getTrend(VideoTrendRequest request) {
-    List<VideoEntityBase> videoEntities = new ArrayList<>();
+    List<VideoEntityBase> allVideoEntities = new ArrayList<>();
     LocalDateTime from, to;
     if (request.getMode().equals("recent")) {
-      videoEntities.addAll(recentVideoRepository.findByHideFalse());
+      allVideoEntities.addAll(recentVideoRepository.findByHideFalse());
       from = LocalDateTime.now().minusDays(Math.min(request.getRange(), 180L));
       to = LocalDateTime.now();
     } else {
-      videoEntities.addAll(videoRepository.findByHideFalse());
+      allVideoEntities.addAll(videoRepository.findByHideFalse());
       if(request.getSeason().equals("spring")){
         from = LocalDateTime.of(request.getYear(), 3, 1, 0, 0, 0);
         to = LocalDateTime.of(request.getYear(), 5, 31, 23, 59, 59);
@@ -53,24 +54,29 @@ public class TrendService implements ITrendService {
         to = LocalDateTime.of(request.getYear() + 1, 3, 1, 0, 0, 0);
       }
     }
-    List<ViewcountEntity> viewcountEntities = viewcountRepository.findByVideoIdIn(videoEntities.stream().map(VideoEntityBase::getVideoId).toList());
-    List<VideoTrendDto> allDtos = new ArrayList<>();
-    for(int i = 0; i < videoEntities.size(); i++) {
-      VideoEntityBase videoEntity = videoEntities.get(i);
-      String videoId = videoEntity.getVideoId();
-      allDtos.add(
-        convertToDto(
-          videoEntity,
-          viewcountEntities.stream()
-            .filter(viewcountEntity -> viewcountEntity.getVideoId().equals(videoId))
-            .sorted(Comparator.comparing(ViewcountEntity::getLogDate).reversed())
-            .collect(Collectors.toList())));
-    }
-    List<VideoTrendDto> dtos = allDtos.stream()
+    List<ViewcountEntity> allViewcountEntities = viewcountRepository.findLatestByEachVideoIdWithWindow();
+
+    List<VideoEntityBase> videoEntities = allVideoEntities.stream()
       .filter(video -> {
         LocalDateTime published = video.getPublishedAt();
         return !published.isBefore(from) && !published.isAfter(to);
-      }).collect(Collectors.toList());
+      })
+      .sorted(Comparator.comparing(VideoEntityBase::getVideoId))
+      .collect(Collectors.toList());
+
+    Set<String> videoIdSet = videoEntities.stream().map(VideoEntityBase::getVideoId).collect(Collectors.toSet());
+
+    List<ViewcountEntity> viewcountEntities =  allViewcountEntities.stream()
+      .filter(vc -> videoIdSet.contains(vc.getVideoId()))
+      .sorted(Comparator.comparing(ViewcountEntity::getVideoId))
+      .toList();
+    List<VideoTrendDto> dtos = new ArrayList<>();
+    for(int i = 0; i < videoEntities.size(); i++) {
+      if(!videoEntities.get(i).getVideoId().equals(viewcountEntities.get(i).getVideoId())) {
+        throw new AssertionError("VideoIdの不一致: " + videoEntities.get(i).getVideoId() + " vs. " + viewcountEntities.get(i).getVideoId());
+      }
+      dtos.add(convertToDto(videoEntities.get(i), List.of(viewcountEntities.get(i))));
+    }
     if(request.getChannelId() != null) {
       dtos = dtos.stream().filter(video -> request.getChannelId().equals(video.getChannelId())).collect(Collectors.toList());
     }
@@ -83,7 +89,7 @@ public class TrendService implements ITrendService {
     int start = pageSize * (page - 1);
     int end = Math.min(start + pageSize, dtos.size());
 
-    if (start >= dtos.size()) {
+    if (dtos.isEmpty() || start >= dtos.size()) {
       return Collections.emptyList();
     } else{
       return dtos.subList(start, end).stream().map(this::convertToResponse).collect(Collectors.toList());
