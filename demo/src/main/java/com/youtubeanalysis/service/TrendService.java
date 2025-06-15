@@ -72,10 +72,14 @@ public class TrendService implements ITrendService {
       .toList();
     List<VideoTrendDto> dtos = new ArrayList<>();
     for(int i = 0; i < videoEntities.size(); i++) {
-      if(!videoEntities.get(i).getVideoId().equals(viewcountEntities.get(i).getVideoId())) {
-        throw new AssertionError("VideoIdの不一致: " + videoEntities.get(i).getVideoId() + " vs. " + viewcountEntities.get(i).getVideoId());
+      try {
+        if(!videoEntities.get(i).getVideoId().equals(viewcountEntities.get(i).getVideoId())) {
+          throw new AssertionError("VideoIdの不一致: " + videoEntities.get(i).getVideoId() + " vs. " + viewcountEntities.get(i).getVideoId());
+        }
+        dtos.add(convertToDto(videoEntities.get(i), List.of(viewcountEntities.get(i))));
+      } catch (Exception e) {
+        System.out.println("warn: cannot get viewcount entity: videoId = " + videoEntities.get(i).getVideoId());
       }
-      dtos.add(convertToDto(videoEntities.get(i), List.of(viewcountEntities.get(i))));
     }
     if(request.getChannelId() != null) {
       dtos = dtos.stream().filter(video -> request.getChannelId().equals(video.getChannelId())).collect(Collectors.toList());
