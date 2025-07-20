@@ -5,10 +5,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 
 import com.youtubeanalysis.domain.entity.VideoEntityBase;
 import com.youtubeanalysis.domain.entity.ViewcountEntity;
@@ -34,6 +36,7 @@ public class TrendService implements ITrendService {
   public List<VideoTrendResponse> getTrend(VideoTrendRequest request) {
     List<VideoEntityBase> allVideoEntities = new ArrayList<>();
     LocalDateTime from, to;
+    // 抽出期間の確定
     if (request.getMode().equals("recent")) {
       allVideoEntities.addAll(recentVideoRepository.findByHideFalse());
       from = LocalDateTime.now().minusDays(Math.min(request.getRange(), 180L));
@@ -54,8 +57,10 @@ public class TrendService implements ITrendService {
         to = LocalDateTime.of(request.getYear() + 1, 3, 1, 0, 0, 0);
       }
     }
+    // 全viewcountの中で各videoIdにつき最も新しいものを一つずつ返す
     List<ViewcountEntity> allViewcountEntities = viewcountRepository.findLatestByEachVideoIdWithWindow();
 
+    // from, to で抽出する動画を絞り込み、videoIdの順番に並び替える
     List<VideoEntityBase> videoEntities = allVideoEntities.stream()
       .filter(video -> {
         LocalDateTime published = video.getPublishedAt();
@@ -64,19 +69,20 @@ public class TrendService implements ITrendService {
       .sorted(Comparator.comparing(VideoEntityBase::getVideoId))
       .collect(Collectors.toList());
 
+    // 検索結果であるvideoEntitiesからidを抜き出す
     Set<String> videoIdSet = videoEntities.stream().map(VideoEntityBase::getVideoId).collect(Collectors.toSet());
-
-    List<ViewcountEntity> viewcountEntities =  allViewcountEntities.stream()
+    // viewcountを検索結果に合わせて絞り込んでvideoIdで並び替える
+    Map<String, List<ViewcountEntity>> viewcountMap = allViewcountEntities.stream()
       .filter(vc -> videoIdSet.contains(vc.getVideoId()))
-      .sorted(Comparator.comparing(ViewcountEntity::getVideoId))
-      .toList();
+      .collect(Collectors.groupingBy(ViewcountEntity::getVideoId));
     List<VideoTrendDto> dtos = new ArrayList<>();
     for(int i = 0; i < videoEntities.size(); i++) {
       try {
-        if(!videoEntities.get(i).getVideoId().equals(viewcountEntities.get(i).getVideoId())) {
-          throw new AssertionError("VideoIdの不一致: " + videoEntities.get(i).getVideoId() + " vs. " + viewcountEntities.get(i).getVideoId());
-        }
-        dtos.add(convertToDto(videoEntities.get(i), List.of(viewcountEntities.get(i))));
+        var videoEntity = videoEntities.get(i);
+        // if(!videoEntities.get(i).getVideoId().equals(viewcountEntities.get(i).getVideoId())) {
+        //   throw new AssertionError("VideoIdの不一致: " + videoEntities.get(i).getVideoId() + " vs. " + viewcountEntities.get(i).getVideoId());
+        // }
+        dtos.add(convertToDto(videoEntity, viewcountMap.get(videoEntity.getVideoId())));
       } catch (Exception e) {
         System.out.println("warn: cannot get viewcount entity: videoId = " + videoEntities.get(i).getVideoId());
       }
@@ -113,7 +119,17 @@ public class TrendService implements ITrendService {
     response.setThumbnail(baseVideo.getThumbnailUrl());
     response.setPublishedAt(baseVideo.getPublishedAt());
     response.setVideoType(baseVideo.getVideoType());
-    response.setViewcountList(baseViewcountList);
+    if (ObjectUtils.isEmpty(baseViewcountList)) {
+      System.out.println("warn: cannot get viewcount entity: videoId = " + baseVideo.getVideoId());
+
+      var defaultViewcountEntity = new ViewcountEntity();
+      defaultViewcountEntity.setLogDate(LocalDateTime.now().toLocalDate());
+      defaultViewcountEntity.setVideoId(baseVideo.getVideoId());
+      defaultViewcountEntity.setViewCount(0L);
+      response.setViewcountList(List.of(defaultViewcountEntity));
+    } else {
+      response.setViewcountList(baseViewcountList);
+    }
     return response;
   }
 
